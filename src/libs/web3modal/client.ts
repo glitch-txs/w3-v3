@@ -3,68 +3,128 @@ import type {
   CaipNetwork,
   CaipNetworkId,
   ConnectionControllerClient,
-  NetworkControllerClient
+  NetworkControllerClient,
+  ProjectId
 } from '@web3modal/scaffold'
 import { Web3ModalScaffoldHtml } from '@web3modal/scaffold'
-import { Chain, web3Store, connectW3, disconnectW3 } from 'w3-evm-react'
+import {
+  ADD_CHAIN_METHOD,
+  INJECTED_ID,
+  NAMESPACE,
+  NAME_MAP,
+  TYPE_MAP,
+  WALLET_CHOICE_KEY,
+  WALLET_CONNECT_ID
+} from './constants.js'
+import { connectW3, disconnectW3, getW3, subW3 } from '../w3/index.js'
+import { switchNetwork } from './utils/index.js'
+import type WalletConnectProvider from '@walletconnect/ethereum-provider'
 
-const { getState, subscribe } = web3Store
-// -- Helpers -------------------------------------------------------------------
-const WALLET_CONNECT_ID = 'walletconnect'
-const NAMESPACE = 'eip155'
-
-interface Web3ModalOptions {
-  projectId: string
+// -- Types ---------------------------------------------------------------------
+export interface Web3ModalOptions {
+  projectId: ProjectId
 }
+
 // -- Client --------------------------------------------------------------------
 export class Web3Modal extends Web3ModalScaffoldHtml {
   public constructor(options: Web3ModalOptions) {
     const { projectId } = options
 
+    const connectors = getW3.connectors()
+
     if (!projectId) {
       throw new Error('web3modal:constructor - projectId is undefined')
     }
 
+    if (!connectors.find(c => c.id === WALLET_CONNECT_ID)) {
+      throw new Error('web3modal:constructor - WalletConnectConnector is required')
+    }
+
     const networkControllerClient: NetworkControllerClient = {
-      async switchCaipNetwork(caipChainId) {
-        const chainId = caipChainId?.split(':')[1]
-        const chainIdNumber = Number(chainId)
-        await getState().w3Provider.request({ 
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: chainIdNumber }]
-         })
+      switchCaipNetwork: async caipNetwork => {
+        const id = this.caipNetworkIdToNumber(caipNetwork?.id)
+        const [chain] = getW3.chains().filter(({ chainId })=> Number(chainId) === id )
+        if (chain) {
+          await switchNetwork(chain)
+        }
+      },
+
+      async getApprovedCaipNetworksData() {
+        const walletChoice = localStorage.getItem(WALLET_CHOICE_KEY)
+        if (walletChoice?.includes(WALLET_CONNECT_ID)) {
+          const connector = getW3.connectors().find(c => c.id === WALLET_CONNECT_ID)
+          if (!connector) {
+            throw new Error(
+              'networkControllerClient:getApprovedCaipNetworks - connector is undefined'
+            )
+          }
+          const provider = await connector.getProvider()
+          const ns = (provider as WalletConnectProvider).signer?.session?.namespaces
+          const nsMethods = ns?.[NAMESPACE]?.methods
+          const nsChains = ns?.[NAMESPACE]?.chains
+
+          return {
+            supportsAllNetworks: Boolean(nsMethods?.includes(ADD_CHAIN_METHOD)),
+            approvedCaipNetworkIds: nsChains as CaipNetworkId[]
+          }
+        }
+
+        return { approvedCaipNetworkIds: undefined, supportsAllNetworks: true }
       }
     }
 
     const connectionControllerClient: ConnectionControllerClient = {
-      async connectWalletConnect(onUri) {
-        const connector = getState().wallets.find(c => c.id === WALLET_CONNECT_ID)
+      connectWalletConnect: async onUri => {
+        const connector = getW3.connectors().find(c => c.id === WALLET_CONNECT_ID)
         if (!connector) {
           throw new Error('connectionControllerClient:getWalletConnectUri - connector is undefined')
         }
+        //@ts-ignore TODO - Cafe library type issue - I'll solve this later.
+        subW3.uri(onUri)
 
-        console.log("triggered")
-        function handleUri(event: any){
-          onUri(event.detail.uri)
-          window.removeEventListener('walletconnect#uri', handleUri)
-        }
-        window.addEventListener('walletconnect#uri', handleUri)
+        const chainId = this.caipNetworkIdToNumber(this.getCaipNetwork()?.id)
 
+        /* TODO - Add option to connect to a specific chain */
         await connectW3(connector)
       },
 
-      async connectExternal(id) {
-        const connector = getState().wallets.find(c => c.id === id)
+      connectExternal: async id => {
+        const connector = getW3.connectors().find(c => c.id === id)
         if (!connector) {
           throw new Error('connectionControllerClient:connectExternal - connector is undefined')
         }
 
+        const chainId = this.caipNetworkIdToNumber(this.getCaipNetwork()?.id)
+
+        /* TODO - Add option to connect to a specific chain */
         await connectW3(connector)
       },
 
-      async disconnect(){
-        disconnectW3()
-      }
+      connectInjected: async () => {
+        const connector = getW3.connectors().find(c => c.id === INJECTED_ID)
+        if (!connector) {
+          throw new Error('connectionControllerClient:connectInjected - connector is undefined')
+        }
+
+        const chainId = this.caipNetworkIdToNumber(this.getCaipNetwork()?.id)
+
+        /* TODO - Add option to connect to a specific chain */
+        await connectW3(connector)
+      },
+
+      checkInjectedInstalled(ids) {
+        if (!window?.ethereum) {
+          return false
+        }
+
+        if (!ids) {
+          return Boolean(window.ethereum)
+        }
+
+        return ids.some(id => Boolean((window.ethereum as unknown as Record<string, unknown>)?.[String(id)]))
+      },
+
+      disconnect: disconnectW3
     }
 
     super({
@@ -73,72 +133,89 @@ export class Web3Modal extends Web3ModalScaffoldHtml {
       projectId
     })
 
-    this.syncConnectors()
-    subscribe(({ wallets })=> this.syncConnectors())
+    this.syncRequestedNetworks(getW3.chains())
+
+    this.syncConnectors(getW3.connectors())
 
     this.syncAccount()
-    subscribe(({ address })=> this.syncAccount())
+    subW3.address(() => this.syncAccount())
 
     this.syncNetwork()
-    subscribe(({ chainId })=> this.syncNetwork())
+    subW3.chainId(() => this.syncNetwork())
   }
 
   // -- Private -----------------------------------------------------------------
+  private syncRequestedNetworks(chains: Web3ModalOptions['chains']) {
+    const requestedCaipNetworks = chains?.map(
+      chain =>
+        ({
+          id: `${NAMESPACE}:${chain.id}`,
+          name: chain.name
+        }) as CaipNetwork
+    )
+    this.setRequestedCaipNetworks(requestedCaipNetworks ?? [])
+  }
+
   private async syncAccount() {
-    const address = getState().address
-    const chainId = getState().chainId
+    const { address, isConnected } = getAccount()
+    const { chain } = getNetwork()
     this.resetAccount()
-    if (address && chainId) {
+    if (isConnected && address && chain) {
       this.resetWcConnection()
-      const caipAddress: CaipAddress = `${NAMESPACE}:${chainId}:${address}`
-      this.setIsConnected(Boolean(address))
+      const caipAddress: CaipAddress = `${NAMESPACE}:${chain.id}:${address}`
+      this.setIsConnected(isConnected)
       this.setCaipAddress(caipAddress)
-      await Promise.all([
-        this.syncProfile(address),
-        this.syncBalance(address, getState().chains.find(c => Number(c.chainId) === chainId) as Chain)
-      ])
+      this.syncNetwork()
+      await Promise.all([this.syncProfile(address), this.getApprovedCaipNetworksData()])
+    } else if (!isConnected) {
+      this.resetNetwork()
     }
   }
 
   private async syncNetwork() {
-    const address = getState().address
-    const chainId = getState().chainId
-    if (chainId) {
-      const caipChainId: CaipChainId = `${NAMESPACE}:${chainId}`
-      this.setCaipNetwork(caipChainId)
-      if (address) {
-        const caipAddress: CaipAddress = `${NAMESPACE}:${chainId}:${address}`
+    const { address, isConnected } = getAccount()
+    const { chain } = getNetwork()
+    if (chain) {
+      const chainId = String(chain.id)
+      const caipChainId: CaipNetworkId = `${NAMESPACE}:${chainId}`
+      this.setCaipNetwork({ id: caipChainId, name: chain.name })
+      if (isConnected && address) {
+        const caipAddress: CaipAddress = `${NAMESPACE}:${chain.id}:${address}`
         this.setCaipAddress(caipAddress)
-        await this.syncBalance(address, getState().chains.find(c => Number(c.chainId) === chainId) as Chain)
+        await this.syncBalance(address, chain)
       }
     }
   }
 
-  private async syncProfile(address: string) {
-    const profileName = undefined //TODO fetch ENSName
+  private async syncProfile(address: Address) {
+    const profileName = await fetchEnsName({ address, chainId: mainnet.id })
     if (profileName) {
       this.setProfileName(profileName)
-      const profileImage = undefined //TODO fetch Image
+      const profileImage = await fetchEnsAvatar({ name: profileName, chainId: mainnet.id })
       if (profileImage) {
         this.setProfileImage(profileImage)
       }
     }
   }
 
-  private async syncBalance(address: string, chain: Chain) {
-    const balance = undefined //TODO fetch balance
-    this.setBalance(balance)
+  private async syncBalance(address: Address, chain: Chain) {
+    const balance = await fetchBalance({ address, chainId: chain.id })
+    this.setBalance(balance.formatted, balance.symbol)
   }
 
-  private syncConnectors() {
-    const connectors = getState().wallets?.map(
+  private syncConnectors(connectors: Web3ModalOptions['wagmiConfig']['connectors']) {
+    const w3mConnectors = connectors.map(
       connector =>
         ({
           id: connector.id,
-          name: connector.id === 'injected' ? 'Browser Wallet' : connector.name as string,
-          type: connector.id === WALLET_CONNECT_ID ? 'WALLET_CONNECT' : 'EXTERNAL'
+          name: NAME_MAP[connector.id] ?? connector.name,
+          type: TYPE_MAP[connector.id] ?? 'EXTERNAL'
         }) as const
     )
-    this.setConnectors(connectors ?? [])
+    this.setConnectors(w3mConnectors ?? [])
+  }
+
+  private caipNetworkIdToNumber(caipnetworkId?: CaipNetworkId) {
+    return caipnetworkId ? Number(caipnetworkId.split(':')[1]) : undefined
   }
 }

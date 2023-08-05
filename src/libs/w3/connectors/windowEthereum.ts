@@ -12,7 +12,7 @@ export class WindowEthereum {
   /**Wallet icon */
   readonly icon?: any
   
-  protected getProvider():Promise<Provider> | Provider | undefined{
+  getProvider():Promise<Provider> | Provider | undefined{
     if(typeof window === 'undefined') return
     return window.ethereum
   }

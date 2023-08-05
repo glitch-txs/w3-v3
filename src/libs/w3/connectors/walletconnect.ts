@@ -1,6 +1,6 @@
 import { QrModalOptions } from "@walletconnect/ethereum-provider/dist/types/EthereumProvider"
 import { Provider } from "../types"
-import { DEBUG, KEY_WALLET } from "../constants"
+import {  KEY_WALLET } from "../constants"
 import { WindowEthereum } from "./windowEthereum"
 import { getW3, setW3 } from "../store/w3store"
 
@@ -22,7 +22,7 @@ export class WalletConnect extends WindowEthereum {
 
     super()
 
-    this.id = "walletconnect"
+    this.id = "walletConnect"
     this.name = 'WalletConnect'
     this.icon = options.icon
     this.options = options
@@ -39,6 +39,7 @@ export class WalletConnect extends WindowEthereum {
       chains: [Number(getW3.chains()[0]?.chainId)],
       optionalChains: getW3.chains().map(chain => Number(chain.chainId)),
       showQrModal:showQrModal ?? false,
+      qrModalOptions,
       optionalMethods:OPTIONAL_METHODS,
       optionalEvents:OPTIONAL_EVENTS,
     }).catch(setW3.error)

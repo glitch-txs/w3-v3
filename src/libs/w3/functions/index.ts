@@ -1,19 +1,18 @@
-import { WindowEthereum } from "../connectors"
 import { EIP6963Connector } from "../connectors/EIP6963"
 import { setW3, getW3 } from "../store/w3store"
 import { Chain, Connector, EIP6963AnnounceProviderEvent } from "../types"
 import { KEY_WALLET } from "../constants"
 
 /* Connect & Disconnect Functions */
-export async function connectW3(wallet: WindowEthereum): Promise<void>{
-  await wallet.connect()
+export async function connectW3(connector: Connector): Promise<void>{
+  await connector.connect()
 }
 
-export function disconnectW3(){
+export async function disconnectW3(){
   const connectors = getW3.connectors()
   const [connector] = connectors.filter(w => w.id === window?.localStorage.getItem(KEY_WALLET))
   
-  if(connector) connector.disconnect()
+  if(connector) await connector.disconnect()
   else
   for(let w of connectors) w.disconnect()
 }
