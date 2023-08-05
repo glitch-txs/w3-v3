@@ -1,6 +1,6 @@
 import React from 'react'
 import { disconnectW3, getW3Address, useConnect } from 'w3-evm-react'
-import { Web3Modal } from '../lib/client'
+import { Web3Modal } from '../libs/web3modal/client'
 import s from '../styles/Home.module.css'
 
 // 3. Create Web3Modal
