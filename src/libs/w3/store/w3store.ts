@@ -41,7 +41,12 @@ interface W3Store {
 }
 
 export const { set: setW3, sub: subW3, get: getW3 } = createStore<W3Store>({
+  uri: undefined,
   wait:'Initializing',
+  address: undefined,
+  chainId: undefined,
   chains: [],
-  connectors: []
+  error: undefined,
+  connectors: [],
+  walletProvider: undefined,
 })

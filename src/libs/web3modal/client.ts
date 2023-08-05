@@ -15,9 +15,9 @@ import {
   TYPE_MAP,
   WALLET_CHOICE_KEY,
   WALLET_CONNECT_ID
-} from './constants.js'
-import { connectW3, disconnectW3, getW3, subW3 } from '../w3/index.js'
-import { switchNetwork } from './utils/index.js'
+} from './constants'
+import { Chain, Connector, connectW3, disconnectW3, getW3, subW3 } from '../w3'
+import { switchNetwork } from './utils'
 import type WalletConnectProvider from '@walletconnect/ethereum-provider'
 
 // -- Types ---------------------------------------------------------------------
@@ -145,65 +145,67 @@ export class Web3Modal extends Web3ModalScaffoldHtml {
   }
 
   // -- Private -----------------------------------------------------------------
-  private syncRequestedNetworks(chains: Web3ModalOptions['chains']) {
+  private syncRequestedNetworks(chains: Chain[]) {
     const requestedCaipNetworks = chains?.map(
       chain =>
         ({
-          id: `${NAMESPACE}:${chain.id}`,
-          name: chain.name
+          id: `${NAMESPACE}:${Number(chain.chainId)}`,
+          name: chain.chainName
         }) as CaipNetwork
     )
     this.setRequestedCaipNetworks(requestedCaipNetworks ?? [])
   }
 
   private async syncAccount() {
-    const { address, isConnected } = getAccount()
-    const { chain } = getNetwork()
+    const address = getW3.address()
+    const chainId = getW3.chainId()
     this.resetAccount()
-    if (isConnected && address && chain) {
+    if (address && chainId) {
       this.resetWcConnection()
-      const caipAddress: CaipAddress = `${NAMESPACE}:${chain.id}:${address}`
-      this.setIsConnected(isConnected)
+      const caipAddress: CaipAddress = `${NAMESPACE}:${chainId}:${address}`
+      this.setIsConnected(Boolean(address))
       this.setCaipAddress(caipAddress)
       this.syncNetwork()
       await Promise.all([this.syncProfile(address), this.getApprovedCaipNetworksData()])
-    } else if (!isConnected) {
+    } else if (!address) {
       this.resetNetwork()
     }
   }
 
   private async syncNetwork() {
-    const { address, isConnected } = getAccount()
-    const { chain } = getNetwork()
+    const address = getW3.address()
+    const id = getW3.chainId()
+    const [chain] = getW3.chains().filter(({chainId})=> Number(chainId) === id)
     if (chain) {
-      const chainId = String(chain.id)
-      const caipChainId: CaipNetworkId = `${NAMESPACE}:${chainId}`
-      this.setCaipNetwork({ id: caipChainId, name: chain.name })
-      if (isConnected && address) {
-        const caipAddress: CaipAddress = `${NAMESPACE}:${chain.id}:${address}`
+      const caipChainId: CaipNetworkId = `${NAMESPACE}:${id}`
+      this.setCaipNetwork({ id: caipChainId, name: chain.chainName })
+      if (address) {
+        const caipAddress: CaipAddress = `${NAMESPACE}:${id}:${address}`
         this.setCaipAddress(caipAddress)
         await this.syncBalance(address, chain)
       }
     }
   }
 
-  private async syncProfile(address: Address) {
-    const profileName = await fetchEnsName({ address, chainId: mainnet.id })
+  private async syncProfile(address: string) {
+    // TODO 
+    const profileName = undefined
     if (profileName) {
       this.setProfileName(profileName)
-      const profileImage = await fetchEnsAvatar({ name: profileName, chainId: mainnet.id })
+      const profileImage = undefined
       if (profileImage) {
         this.setProfileImage(profileImage)
       }
     }
   }
 
-  private async syncBalance(address: Address, chain: Chain) {
-    const balance = await fetchBalance({ address, chainId: chain.id })
-    this.setBalance(balance.formatted, balance.symbol)
+  private async syncBalance(address: string, chain: Chain) {
+    // TODO 
+    const balance = undefined
+    this.setBalance(balance, balance)
   }
 
-  private syncConnectors(connectors: Web3ModalOptions['wagmiConfig']['connectors']) {
+  private syncConnectors(connectors: Connector[]) {
     const w3mConnectors = connectors.map(
       connector =>
         ({
@@ -215,7 +217,7 @@ export class Web3Modal extends Web3ModalScaffoldHtml {
     this.setConnectors(w3mConnectors ?? [])
   }
 
-  private caipNetworkIdToNumber(caipnetworkId?: CaipNetworkId) {
-    return caipnetworkId ? Number(caipnetworkId.split(':')[1]) : undefined
+  private caipNetworkIdToNumber(caipNetworkId?: CaipNetworkId) {
+    return caipNetworkId ? Number(caipNetworkId.split(':')[1]) : undefined
   }
 }

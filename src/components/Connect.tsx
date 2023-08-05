@@ -1,25 +1,24 @@
 import React from 'react'
-import { disconnectW3, getW3Address, useConnect } from 'w3-evm-react'
-import { Web3Modal } from '../libs/web3modal/client'
 import s from '../styles/Home.module.css'
-
-// 3. Create Web3Modal
-const modal = new Web3Modal({ projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_ID as string })
+import { getW3Address } from '@/libs/w3-react'
+import { disconnectW3 } from '@/libs/w3'
+import { openWeb3Modal } from '@/libs/w3-react/store'
 
 export default function Connect() {
   
-  async function openModal() {
-    await modal.open()
+  async function openModalAccount() {
+    await openWeb3Modal({view: 'Account'})
   }
+
   const address = getW3Address()
 
   return (
     <>  { address ?
         <>
-          <button className={s.button} onClick={openModal}>{address}</button>
+          <button className={s.button} onClick={openModalAccount}>{address}</button>
           <button className={s.button} onClick={() => disconnectW3()}>Disconnect</button>
         </> : (
-        <button className={s.button} onClick={openModal}>Connect Wallet</button>
+        <button className={s.button} onClick={()=>openWeb3Modal()}>Connect Wallet</button>
       )}
     </>
   )

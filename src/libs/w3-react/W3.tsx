@@ -3,12 +3,19 @@ import { Connector } from '../w3/types'
 import { KEY_WALLET } from '../w3/constants'
 import { initEIP6963, storedWalletExists } from '../w3/functions'
 import { setW3 } from '../w3/store/w3store'
+import { Web3Modal } from '../web3modal/client'
+import { set } from './store'
 
 let init = 0
 
-export function W3({ connectors }:{ connectors?: Connector[] }):null{
+export function W3({ connectors, projectId }:{ connectors?: Connector[], projectId: string }):null{
 
   useEffect(()=>{
+    if(init === 0){
+      const { open } = new Web3Modal({ projectId })
+      //set.open(open)
+    }
+
     if(init === 0 && connectors){
       initEIP6963()
       for(let w of connectors) w.init()
