@@ -1,16 +1,13 @@
 import React from 'react'
 import Head from 'next/head'
 import styles from '../styles/Home.module.css'
-import { getW3Address, getW3Chain, useConnect } from 'w3-evm-react'
 import Connect from '../components/Connect'
+import { getW3Address, getW3Chain } from '@/libs/w3-react'
 
 
 export default function Home() {
   
-  const { wait } = useConnect()
-
   const address = getW3Address()
-
   const chain = getW3Chain()
   
   return (
@@ -22,16 +19,9 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className={styles.main}>
-        
         <Connect/>
-        <br />
-        <br />
-
-        { wait.state ? `${wait.reason}...` : (address ? "Connected" : "Connect Your Wallet") }
-        <br/>
         <br/>
         User: { address }
-        <br/>
         <br/>
         Chain: {chain}
       </main>
