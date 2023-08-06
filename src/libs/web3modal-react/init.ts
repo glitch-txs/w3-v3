@@ -14,11 +14,14 @@ export function initWeb3Modal({ connectors, chains, SSR, projectId, plugin }:
   { connectors: Connector[], chains: Chain[], SSR?: boolean, projectId: string, plugin?: Plugin }){
     
   setW3.projectId(projectId)
-  modal = new Web3Modal({ projectId, plugin })
-
-  return initW3({
+  
+  const props = initW3({
     connectors,
     chains,
     SSR
   })
+
+  modal = new Web3Modal({ projectId, plugin })
+
+  return props
 }

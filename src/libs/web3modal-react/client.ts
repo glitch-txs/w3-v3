@@ -138,6 +138,7 @@ export class Web3Modal extends Web3ModalScaffoldHtml {
     this.syncRequestedNetworks(getW3.chains())
 
     this.syncConnectors(getW3.connectors())
+    subW3.connectors((c)=>this.syncConnectors(c as Connector[])) /* EIP-6963 sub */
 
     this.syncAccount()
     subW3.address(() => this.syncAccount())

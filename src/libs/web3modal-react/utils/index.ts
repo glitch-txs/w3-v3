@@ -1,4 +1,4 @@
-import { Chain, getW3, setW3 } from "@/libs/w3"
+import { Chain, getW3, setW3 } from "../../w3"
 
 /* Switch Network */
 export async function switchNetwork(chain: Chain){

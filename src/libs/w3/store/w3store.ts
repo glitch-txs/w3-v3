@@ -2,10 +2,10 @@ import { Chain, Connector, Provider, ProviderRpcError } from '../types'
 import { createStore } from 'vanilla-cafe'
 
 interface W3Store {
-    /**
-   * WalletConnect Project Id
-   */
-    projectId?: string
+  /**
+  * WalletConnect Project Id
+  */
+  projectId?: string
   /**
    * WalletConnect URI
    */
@@ -45,6 +45,7 @@ interface W3Store {
 }
 
 export const { set: setW3, sub: subW3, get: getW3 } = createStore<W3Store>({
+  projectId: undefined,
   uri: undefined,
   wait:'Initializing',
   address: undefined,
