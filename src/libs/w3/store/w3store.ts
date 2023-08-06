@@ -2,6 +2,10 @@ import { Chain, Connector, Provider, ProviderRpcError } from '../types'
 import { createStore } from 'vanilla-cafe'
 
 interface W3Store {
+    /**
+   * WalletConnect Project Id
+   */
+    projectId?: string
   /**
    * WalletConnect URI
    */

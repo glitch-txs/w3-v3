@@ -2,7 +2,7 @@ import { setW3, getW3 } from "../store/w3store"
 import { Provider } from "../types"
 import { KEY_WALLET } from "../constants"
 
-export class WindowEthereum {
+export class Injected {
   /** Wallet uuid */
   readonly uuid: string = ''
   /** Wallet id */

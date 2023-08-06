@@ -19,10 +19,12 @@ import {
 import { Chain, Connector, connectW3, disconnectW3, getW3, subW3 } from '../w3'
 import { switchNetwork } from './utils'
 import type WalletConnectProvider from '@walletconnect/ethereum-provider'
+import { Plugin } from './types'
 
 // -- Types ---------------------------------------------------------------------
 export interface Web3ModalOptions {
-  projectId: ProjectId
+  projectId: ProjectId,
+  plugin?: Plugin
 }
 
 // -- Client --------------------------------------------------------------------

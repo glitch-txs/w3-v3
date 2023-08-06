@@ -1,13 +1,13 @@
 import { QrModalOptions } from "@walletconnect/ethereum-provider/dist/types/EthereumProvider"
 import { Provider } from "../types"
 import {  KEY_WALLET } from "../constants"
-import { WindowEthereum } from "./windowEthereum"
+import { Injected } from "./injected"
 import { getW3, setW3 } from "../store/w3store"
 
 type WalletConnectOptions = {
-  showQrModal?: boolean, qrModalOptions?: QrModalOptions, projectId: string, icon?: any
+  showQrModal?: boolean, qrModalOptions?: QrModalOptions, icon?: any
 }
-export class WalletConnect extends WindowEthereum {
+export class WalletConnect extends Injected {
   readonly id: string
   readonly name: string
   readonly icon?: any
@@ -15,7 +15,7 @@ export class WalletConnect extends WindowEthereum {
   private options: WalletConnectOptions
   getProvider:()=>Promise<Provider> | Provider | undefined
 
-  constructor(options: WalletConnectOptions){
+  constructor(options?: WalletConnectOptions){
     const getProvider = ()=>{
       return this.provider
     }
@@ -24,16 +24,19 @@ export class WalletConnect extends WindowEthereum {
 
     this.id = "walletConnect"
     this.name = 'WalletConnect'
-    this.icon = options.icon
-    this.options = options
+    this.icon = options?.icon
+    this.options = options  ?? {}
     this.getProvider = getProvider
   }
 
   async init(){
     const { EthereumProvider, OPTIONAL_METHODS, OPTIONAL_EVENTS } = await import("@walletconnect/ethereum-provider")
 
-    const { showQrModal, qrModalOptions, projectId } = this.options
+    const { showQrModal, qrModalOptions } = this.options
   
+    const projectId = getW3.projectId()
+    if(!projectId) throw new Error('Project ID Missing')
+
     const provider = await EthereumProvider.init({
       projectId,
       chains: [Number(getW3.chains()[0]?.chainId)],
@@ -78,13 +81,15 @@ export class WalletConnect extends WindowEthereum {
     
     setW3.wait('Connecting')
     
-    await provider.connect?.().catch(setW3.error)
+    await provider.connect?.().then(async()=>{
+      const connected = await this.setAccountAndChainId(this.provider)
+      if(connected) {
+        setW3.walletProvider(provider as Provider)
+        localStorage.setItem(KEY_WALLET,this.id)
+      }
+    })
+    .catch(setW3.error)
 
-    const connected = await this.setAccountAndChainId(this.provider)
-    if(connected) {
-      setW3.walletProvider(provider as Provider)
-      localStorage.setItem(KEY_WALLET,this.id)
-    }
     setW3.wait(undefined)
   }
 
