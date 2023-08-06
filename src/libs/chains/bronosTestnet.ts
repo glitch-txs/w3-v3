@@ -1,4 +1,4 @@
-import { Chain } from "../types";
+import { Chain } from "../w3";
 
 export const bronosTestnet: Chain = {
   chainName: 'Bronos Testnet',

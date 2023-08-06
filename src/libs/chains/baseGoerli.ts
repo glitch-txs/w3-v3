@@ -1,4 +1,4 @@
-import { Chain } from "../types";
+import { Chain } from "../w3";
 
 export const baseGoerli: Chain = {
   chainName: 'Base Goerli',

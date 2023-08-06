@@ -1,4 +1,4 @@
-import { Chain } from "../types";
+import { Chain } from "../w3";
 
 export const boba: Chain = {
   chainName: 'Boba Network',

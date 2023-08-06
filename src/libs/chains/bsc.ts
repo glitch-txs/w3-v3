@@ -1,4 +1,4 @@
-import { Chain } from "../types";
+import { Chain } from "../w3";
 
 export const bsc: Chain = {
   chainId:'0x38',
