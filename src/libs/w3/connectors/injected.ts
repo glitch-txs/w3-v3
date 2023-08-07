@@ -84,7 +84,6 @@ export class Injected {
         })
       } 
     })
-    .catch(setW3.error)
 
     setW3.wait(undefined)
   }
