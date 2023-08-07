@@ -3,6 +3,7 @@ import s from '../styles/Home.module.css'
 import { disconnectW3 } from '@/libs/w3'
 import { getW3Address } from '@/libs/web3modal-react'
 import { openAccount, openModal } from '@/libs/web3modal-react/init'
+import Sign from './Sign'
 
 export default function Connect() {
 
@@ -13,6 +14,7 @@ export default function Connect() {
         <>
           <button className={s.button} onClick={openAccount}>{address}</button>
           <button className={s.button} onClick={() => disconnectW3()}>Disconnect</button>
+          <Sign/>
         </> : (
         <button className={s.button} onClick={openModal}>Connect Wallet</button>
       )}
