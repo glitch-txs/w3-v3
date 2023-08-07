@@ -51,6 +51,7 @@ export class WalletConnect extends Injected {
       if(window?.localStorage.getItem(KEY_WALLET) === this.id) setW3.wait(undefined)
       return
     }
+    this.provider = provider as Provider
     
     provider.on("disconnect", () => {
       if(localStorage.getItem(KEY_WALLET) === this.id) localStorage.removeItem(KEY_WALLET)
@@ -62,12 +63,12 @@ export class WalletConnect extends Injected {
     if(provider.session){    
       const connected = await this.setAccountAndChainId(provider as Provider)
       if(connected) {
+        console.log("hello", connected)
         if(localStorage.getItem(KEY_WALLET) !== this.id) localStorage.setItem(KEY_WALLET, this.id)
         setW3.walletProvider(provider as Provider), setW3.wait(undefined)
       return
       }
     }
-    this.provider = provider as Provider
     window?.dispatchEvent(new Event('WalletConnect#ready', {bubbles: true}))
   }
 
@@ -96,6 +97,7 @@ export class WalletConnect extends Injected {
   async disconnect() {
     setW3.wait('Disconnecting')
     const provider = await this.getProvider()
+    console.log(provider)
     await provider?.disconnect?.()
     localStorage.removeItem(KEY_WALLET)
     setW3.address(undefined), setW3.chainId(undefined)
