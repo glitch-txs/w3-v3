@@ -79,7 +79,6 @@ export class Injected {
                 method: 'wallet_addEthereumChain',
                 params: [chains[0]],
               })
-              .catch(setW3.error)
           }
         })
       } 
