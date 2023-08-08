@@ -12,7 +12,7 @@ export default function Connect() {
     <>  { address ?
         <>
           <button onClick={openAccount}>{address}</button>
-          <button onClick={() => disconnectW3()}>Disconnect</button>
+          <button onClick={disconnectW3}>Disconnect</button>
           <Sign/>
         </> : (
         <button onClick={openModal}>Connect Wallet</button>
