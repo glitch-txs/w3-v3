@@ -1,6 +1,7 @@
 import { setW3, getW3 } from "../store/w3store"
 import { Provider } from "../types"
 import { KEY_WALLET } from "../constants"
+import { catchError } from "../utils"
 
 export class Injected {
   /** Wallet uuid */
@@ -80,10 +81,10 @@ export class Injected {
                 params: [chains[0]],
               })
           }
-        })
+        }).catch(catchError)
       } 
-    })
-
+    }).catch(catchError)
+    
     setW3.wait(undefined)
   }
 
@@ -107,7 +108,7 @@ export class Injected {
         await provider.request<string | number>({ method: 'eth_chainId' }).then((chainId)=> {
           setW3.chainId(Number(chainId))
 
-        }).catch(setW3.error)
+        }).catch(catchError)
     
         connected = true
   
@@ -115,7 +116,7 @@ export class Injected {
         setW3.address(undefined)
       }
   
-    }).catch(setW3.error)
+    }).catch(catchError)
   
     return connected
   }
@@ -123,7 +124,7 @@ export class Injected {
   protected async setChainId(provider: Provider){
     await provider.request<string | number>({ method: 'eth_chainId' }).then((chainId)=> {
       setW3.chainId(Number(chainId))
-    }).catch(console.error)
+    }).catch(catchError)
   }
 
   protected addEvents(provider: Provider){

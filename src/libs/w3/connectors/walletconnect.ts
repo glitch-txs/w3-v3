@@ -3,6 +3,7 @@ import { Provider } from "../types"
 import {  KEY_WALLET } from "../constants"
 import { Injected } from "./injected"
 import { getW3, setW3 } from "../store/w3store"
+import { catchError } from "../utils"
 
 type WalletConnectOptions = {
   showQrModal?: boolean, qrModalOptions?: QrModalOptions, icon?: any
@@ -45,12 +46,10 @@ export class WalletConnect extends Injected {
       qrModalOptions,
       optionalMethods:OPTIONAL_METHODS,
       optionalEvents:OPTIONAL_EVENTS,
-    }).catch(setW3.error)
+    }).catch(catchError)
   
-    if(!provider){
-      if(window?.localStorage.getItem(KEY_WALLET) === this.id) setW3.wait(undefined)
-      return
-    }
+    if(!provider) throw new Error('Failed to initialize WalletConnect - Error not caught')
+
     this.provider = provider as Provider
     
     provider.on("disconnect", () => {
@@ -82,14 +81,14 @@ export class WalletConnect extends Injected {
     
     setW3.wait('Connecting')
     
-    await provider.connect?.().then(async()=>{
-      const connected = await this.setAccountAndChainId(this.provider)
-      if(connected) {
-        setW3.walletProvider(provider as Provider)
-        localStorage.setItem(KEY_WALLET,this.id)
-      }
-    })
-    .catch(setW3.error)
+    await provider.connect?.()
+    .catch(catchError)
+    
+    const connected = await this.setAccountAndChainId(this.provider)
+    if(connected) {
+      setW3.walletProvider(provider as Provider)
+      localStorage.setItem(KEY_WALLET,this.id)
+    }
 
     setW3.wait(undefined)
   }
