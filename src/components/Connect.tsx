@@ -1,7 +1,6 @@
 import React from 'react'
 import { disconnectW3 } from '@/libs/w3'
-import { getW3Address } from '@/libs/web3modal-react'
-import { openAccount, openModal } from '@/libs/web3modal-react/init'
+import { getW3Address, openAccount, openModal } from '@/libs/web3modal-react'
 import Sign from './Sign'
 
 export default function Connect() {
