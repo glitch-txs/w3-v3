@@ -81,7 +81,7 @@ export class Web3Modal extends Web3ModalScaffoldHtml {
         if (!connector) {
           throw new Error('connectionControllerClient:getWalletConnectUri - connector is undefined')
         }
-        //@ts-ignore TODO - Cafe library type issue - I'll solve this later.
+        
         subW3.uri(onUri)
 
         const chainId = this.caipNetworkIdToNumber(this.getCaipNetwork()?.id)
