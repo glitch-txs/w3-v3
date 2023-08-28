@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { BrowserProvider } from "ethers";
-import { getW3Provider } from "@/libs/web3modal-react";
+import { getW3Provider } from "w3-evm-react";
 
 const Sign = () => {
   const walletProvider = getW3Provider();

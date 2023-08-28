@@ -2,8 +2,7 @@ import React from 'react'
 import Head from 'next/head'
 import styles from '../styles/Home.module.css'
 import Connect from '../components/Connect'
-import { getW3Address, getW3Chain } from '@/libs/web3modal-react'
-
+import { getW3Address, getW3Chain } from 'w3-evm-react'
 
 export default function Home() {
   

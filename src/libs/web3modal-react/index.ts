@@ -1,6 +1,0 @@
-export { getW3Address } from './hooks/getW3Address'
-export { getW3Chain } from './hooks/getW3Chain'
-export { getW3Provider } from './hooks/getW3Provider'
-export { useConnect } from './hooks/useConnect'
-export { W3 } from './W3'
-export { openAccount, openModal, openNetworks, initWeb3Modal } from './init'

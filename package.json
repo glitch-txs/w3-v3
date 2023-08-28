@@ -14,7 +14,7 @@
     "@types/react-dom": "18.2.7",
     "@walletconnect/ethereum-provider": "^2.9.2",
     "@walletconnect/modal": "^2.6.1",
-    "@web3modal/scaffold": "^3.0.0-91ecf92a",
+    "@web3modal/scaffold": "^3.0.0-alpha.4",
     "eslint": "8.46.0",
     "eslint-config-next": "13.4.12",
     "ethers": "^6.7.0",
@@ -22,6 +22,9 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "typescript": "5.1.6",
-    "vanilla-cafe": "^0.1.4"
+    "vanilla-cafe": "^0.1.4",
+    "w3-evm": "^1.2.2",
+    "w3-evm-react": "^1.2.0",
+    "w3-evm-walletconnect": "^0.0.1"
   }
 }
